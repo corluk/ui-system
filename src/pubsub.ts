@@ -5,7 +5,7 @@ type STREAM = ReadableStream | XMLHttpRequestBodyInit
 export interface IPubSub<T extends STREAM> {
 
     Topic : string , 
-    Payload? :T , 
+    Payload? : {} | string | number | boolean , 
     Headers? : {}
 }
 export type  IOnSuccess  = (response : AxiosResponse )=> void 

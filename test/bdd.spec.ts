@@ -2,6 +2,7 @@ import {rest} from 'msw'
 import {setupServer} from 'msw/node'
 import { PubSub } from '../src/pubsub'
 
+let items : unknown[] = []
 const initItems = ()=>{
 
   const items = []
@@ -10,7 +11,7 @@ const initItems = ()=>{
   }
   return items  
 }
-let  items = initItems()
+ 
 
 const addItem = (item : any )=>{
 
@@ -20,7 +21,7 @@ const addItem = (item : any )=>{
 
 const deleteItem = (id: number)=>{
 
-  const index = items.findIndex(item => item.id == id) 
+  const index = items.findIndex((item : any) => item.id == id) 
   if(index > -1 ){
     items = [...items.slice(0,index), ...items.slice(index+1)]
   }
@@ -29,9 +30,9 @@ const deleteItem = (id: number)=>{
 
 const updateItem = (item:any )=>{
     
-    const index = items.findIndex(item => item.id == item.id)
+    const index = items.findIndex((item :any) => item.id == item.id)
     if(index > -1 ){
-        const oldItem = items[index] 
+        const oldItem = items[index] as  any  
         const newItem = {...oldItem , ...item}
         items  = [...items.slice(0,index), newItem , items.slice(index+1)]
         
@@ -67,8 +68,15 @@ const server = setupServer(
     return res(ctx.json({status : -2}))
   }))
 
-beforeAll(() => server.listen())
-afterEach(() => server.resetHandlers())
+
+beforeEach(()=>{
+  items = initItems()
+})
+beforeAll(() =>  server.listen())
+afterEach(() => {
+  server.resetHandlers()
+  items = []
+})
 afterAll(() => server.close())
 describe("bdd tests " , ()=>{
 
@@ -89,4 +97,22 @@ describe("bdd tests " , ()=>{
         
 
     })
+    it("should pubsub  addItem" , ()=>{
+      const topic  = "app.fake.getitems"
+      const newItem = {id:111, title : "item " +  111 } 
+      const itemJson = JSON.stringify(newItem)
+      const items  =    PubSub("/api/fake/broker",{
+                Topic : topic,
+                Payload : newItem
+            },(response)=>{
+              expect(response.status).toEqual(200) 
+              expect(response.data.length).toBeGreaterThan(0)
+
+            },(err)=>{
+              expect(err).toBeNull()
+
+            })      
+    })
+
+    // TODO add update 
 })
