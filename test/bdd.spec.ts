@@ -5,7 +5,7 @@ import { PubSub } from '../src/pubsub'
 const server = setupServer(
   rest.get('/api/fake/broker', async (req, res, ctx) => {
 
-     
+
     const topic = req.headers.get("X-TOPIC")
     return res(ctx.json({topic: topic}))
   }),
@@ -21,8 +21,8 @@ describe("bdd tests " , ()=>{
         const topic  = "app.fake.broker"
         const response =     await PubSub("/api/fake/broker",{
                 Topic : topic
-            })      
-        r
+            })
+        
 
     })
 })
