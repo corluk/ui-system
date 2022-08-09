@@ -1,25 +1,32 @@
 import {get} from "./registry"
+import axios, { AxiosResponse } from "axios"
+import { response } from "msw"
 type STREAM = ReadableStream | XMLHttpRequestBodyInit
 export interface IPubSub<T extends STREAM> {
 
     Topic : string , 
-    Payload? :T 
+    Payload? :T , 
+    Headers? : {}
 }
- export   const PubSub  = async <T extends STREAM>(uri:string ,props: IPubSub<T>)=>{
+export type  IOnSuccess  = (response : AxiosResponse )=> void 
+export type  IOnFail = (error : Error)=> void 
+ export   const PubSub  = async <T extends STREAM>(uri:string ,props: IPubSub<T>,onSuccess:IOnSuccess, onFail:IOnFail )=>{
          
-        const config : RequestInit =  {
-            headers : {
-                "Content-Type" : "application/json", 
-                "X-TOPIC" : props.Topic, 
-                "Authorization" : "Bearer" + get("X-AUTH")
-            },
-            method: "POST", 
-            body : props.Payload  
-        }
+         
         
-        const response = await fetch(uri, config )
-        if (! response.ok){
-            throw new Error("response not ok : " + response.statusText)
+         const defaultHeaders = {
+            "Content-Type" : "application/json", 
+            "X-TOPIC" : props.Topic , 
+            "Authorization" : "Bearer" + get("X-AUTH")
         }
-        return response.json() 
+        let headers = {...defaultHeaders , ...props.Headers}
+         axios.post(uri, props.Payload , {
+                headers : headers,
+                
+            } ).then(response =>{
+                onSuccess(response)
+            }).catch(err=>{
+                onFail(err)
+            })
+        
 }
